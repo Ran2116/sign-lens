@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign Lens</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@2.3.4/lib/p5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@7/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.min.js"></script>
+    <style>
+      body { font-family: -apple-system, sans-serif; margin: 16px; }
+      .match { cursor: pointer; padding: 3px 0; }
+      .match:hover { text-decoration: underline; }
+      .match.active { font-weight: bold; }
+      .credit { color: #888; font-size: 12px; margin-top: 24px; }
+    </style>
+  </head>
+  <body>
+    <script src="lens.js"></script>
+    <script src="sketch.js"></script>
+  </body>
+</html>
