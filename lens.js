@@ -236,10 +236,11 @@ const Lens = (() => {
   }
 
   // Relaxed thresholds, like _build_relaxed_thresholds(): length 3 → 2 → 1
-  const THRESHOLDS = [[MIN_WORD_LEN, MIN_CONF], [2, MIN_CONF], [1, MIN_CONF]];
+  let minConfidence = MIN_CONF;
 
   function pickBest(wordLists) {
-    for (const [minLen, minConf] of THRESHOLDS) {
+    const thresholds = [[MIN_WORD_LEN, minConfidence], [2, minConfidence], [1, minConfidence]];
+    for (const [minLen, minConf] of thresholds) {
       let best = null;
       for (const words of wordLists) {
         const c = largestWord(words, minLen, minConf);
@@ -306,8 +307,11 @@ const Lens = (() => {
 
   // ---------------- Public: recognize ----------------
 
-  async function recognize(source, { topK = 3 } = {}) {
+  // minConf: ignore OCR words below this confidence (0–100).
+  // The Python original uses -1 (accept anything); raise it to skip textures misread as words.
+  async function recognize(source, { topK = 3, minConf = MIN_CONF } = {}) {
     if (!session) throw new Error("Call Lens.load() first");
+    minConfidence = minConf;
     const gray = grayFromSource(source);
 
     // Pad with the edge color so words touching the border are still found
@@ -388,5 +392,19 @@ const Lens = (() => {
     return { font_matches: matches, model_input: grayToCanvas(modelInput) };
   }
 
-  return { load, recognize, classifyImage, loadFont };
+  // ---------------- Public: read the text in a cropped region ----------------
+  // Treats the crop as one line of text and removes spaces, so widely spaced
+  // letters like "F L E A" come back as "FLEA".
+
+  async function readText(source) {
+    if (!worker) throw new Error("Call Lens.load() first");
+    const gray = grayFromSource(source);
+    const g = edgeAverage(gray);
+    const padded = pad(gray, 20, 20, 20, 20, g);
+    await worker.setParameters({ tessedit_pageseg_mode: "7" });
+    const { data } = await worker.recognize(grayToCanvas(padded));
+    return (data.text || "").replace(/\s+/g, "").trim();
+  }
+
+  return { load, recognize, classifyImage, readText, loadFont };
 })();
