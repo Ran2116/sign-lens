@@ -406,5 +406,22 @@ const Lens = (() => {
     return (data.text || "").replace(/\s+/g, "").trim();
   }
 
-  return { load, recognize, classifyImage, readText, loadFont };
+  // ---------------- Public: font file URLs (.ttf) for p5's loadFont() ----------------
+  // First choice: Google's own font files on GitHub (they allow cross-origin loading);
+  // second choice: Mixfont's copy.
+
+  function fontFileUrls(name, { weight = 400 } = {}) {
+    const info = fonts[name];
+    if (!info || !info.files.length) return [];
+    const file =
+      info.files.find((f) => f.weight === weight && f.style === "normal") ||
+      info.files.find((f) => f.style === "normal") ||
+      info.files[0];
+    const urls = [];
+    if (file.gh) urls.push("https://raw.githubusercontent.com/google/fonts/main/" + encodeURI(file.gh).replace(/\[/g, "%5B").replace(/\]/g, "%5D"));
+    if (file.url) urls.push(encodeURI(file.url).replace(/\[/g, "%5B").replace(/\]/g, "%5D"));
+    return urls;
+  }
+
+  return { load, recognize, classifyImage, readText, loadFont, fontFileUrls };
 })();
